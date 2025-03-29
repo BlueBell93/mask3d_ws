@@ -2,68 +2,14 @@
 Das Ziel ist ein Docker-Setup für Mask3D.
 
 # Installation Guide
-Klonen eines Forks mit Easy Setup für Mask3D
-```
-mkdir workspace
-cd workspace
-git clone https://github.com/cvg/Mask3D.git
-```
-
 Bauen des Docker-Images
 ```
-docker build -t mask3d .
+docker build -t mask3d-easysetup .
 ```
 
 Ausführen des Docker-Containers
 ```
 ./run_mask3d_container.sh
-```
-Falls sich der Rechner aufgrund begrenzter Ressourcen aufhängt, setze MAX_JOBS Umgebungsvariable
-```
-export MAX_JOBS=4
-```
-Installation MinkowskiEngine
-``` 
-cd ~/workspace/Mask3D/third_party
-git clone --recursive "https://github.com/NVIDIA/MinkowskiEngine"
-cd MinkowskiEngine
-git checkout 02fc608bea4c0549b0a7b00ca1bf15dee4a0b228
-python setup.py install --force_cuda --blas=openblas
-```
-
-Setup für ScanNet Segmentator
-```
-cd ..
-git clone https://github.com/ScanNet/ScanNet.git
-cd ScanNet/Segmentator
-git checkout 3e5726500896748521a6ceb81271b0f5b2c0e7d2
-make
-```
-
-Installation pointnet2
-``` 
-cd ../../pointnet2
-python setup.py install
-``` 
-Installation pytorch-lightning und Gesamt-Installation
-``` 
-cd ../../
-pip3 install pytorch-lightning
-pip install .
-``` 
-
-# Setup beim Starten der Dockerfile
-Teile der Installation gehen verloren und müssen bei 
-jedem Start des Docker-Containers ausgeführt werden
-
-```
-cd ~/workspace/Mask3D/third_party/MinkowskiEngine
-python setup.py install --force_cuda --blas=openblas
-cd ~/workspace/Mask3D/third_party/pointnet2
-python setup.py install
-cd ../../
-pip3 install pytorch-lightning
-pip install .
 ```
 
 # Date Preprocessing für S3DIS
@@ -78,9 +24,8 @@ Korrektur einiger Fehler im Datensatz via (siehe hierzu [ISBNet Issue 60](https:
 
 Vorbereitung der Daten 
 ```
-python -m datasets.preprocessing.s3dis_preprocessing preprocess \
---data_dir="/root/workspace/Mask3D/data/Stanford3dDataset_v1.2_Aligned_Version" \
---save_dir="/root/workspace/Mask3D/data/processed/s3dis"
+cd /workspace/Mask3d/mask3d
+python -m datasets.preprocessing.s3dis_preprocessing preprocess --data_dir="/root/workspace/datasets/Stanford3dDataset_v1.2_Aligned_Version" --save_dir="/root/workspace/data/processed/s3dis"
 ```
 
 # Testen
@@ -91,3 +36,6 @@ Ausführen eines Tests:
 ``` 
 cd ~/workspace/Mask3D/
 python main_instance_segmentation.py general.checkpoint="/root/workspace/Mask3D/checkpoints/s3dis/scratch/area6_from_scratch.ckpt" general.train_mode=false
+
+## TODOs
+symlink setzen, checkpoints herunterladen, Tests ausführen
