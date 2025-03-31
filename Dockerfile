@@ -1,6 +1,6 @@
 FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-devel
 
-ENV TORCH_CUDA_ARCH_LIST="8.0"
+ENV TORCH_CUDA_ARCH_LIST="6.0 6.1 6.2 7.0 7.2 7.5 8.0 8.6"
 
 # Umgebungsvariablen setzen
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -185,17 +185,18 @@ RUN pip install torch-scatter -f https://data.pyg.org/whl/torch-1.12.1+cu113.htm
 RUN pip install 'git+https://github.com/facebookresearch/detectron2.git@710e7795d0eeadf9def0e7ef957eea13532e34cf' --no-deps
 
 WORKDIR /workspace
-RUN git clone https://github.com/cvg/Mask3D.git
-RUN export MAX_JOBS=4
+RUN git clone https://github.com/JonasSchult/Mask3D.git
+ENV MAX_JOBS=4
 
 # Minkowski Engine
 WORKDIR /workspace/Mask3D/third_party
-RUN git clone --recursive "https://github.com/NVIDIA/MinkowskiEngine" \
-    && cd MinkowskiEngine \
-    && git checkout 02fc608bea4c0549b0a7b00ca1bf15dee4a0b228 \
+RUN git clone --recursive "https://github.com/NVIDIA/MinkowskiEngine" 
+WORKDIR /workspace/Mask3D/third_party/MinkowskiEngine 
+RUN git checkout 02fc608bea4c0549b0a7b00ca1bf15dee4a0b228 \
     && python setup.py install --force_cuda --blas=openblas
 
 # Scannet
+WORKDIR /workspace/Mask3D/third_party/
 RUN git clone https://github.com/ScanNet/ScanNet.git \
     && cd ScanNet/Segmentator \
     && git checkout 3e5726500896748521a6ceb81271b0f5b2c0e7d2 \
@@ -208,5 +209,9 @@ RUN cd pointnet2 \
 # pytorch-lightning
 WORKDIR /workspace/Mask3D
 RUN pip3 install pytorch-lightning==1.7.2
+
+# set symlinks
+RUN ln -s /root/workspace/checkpoints/ /workspace/Mask3D/ \
+    && ln -s /root/workspace/data/ /workspace/Mask3D/
 
 

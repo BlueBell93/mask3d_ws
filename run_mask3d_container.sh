@@ -7,4 +7,4 @@ docker run \
     --mount type=bind,source="$(pwd)/workspace",target=/root/workspace \
     --name mask3d-easysetup \
     --network=host \
-   mask3d-easysetup:latest
+   mask3d:v1
