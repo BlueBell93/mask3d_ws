@@ -41,9 +41,43 @@ Herunterladen des entsprechenden Checkpoints für S3DIS-Datensatz und Ablegen in
 **~/workspace/Mask3D/mask3d/checkpoints/s3dis/scannet_pretrained/area6_scannet_pretrained.ckpt**
 
 Ausführen eines Tests:
+Warning, dass die Shapes des Checkpoints nicht stimmt:
 ``` 
 cd ~/workspace/Mask3D/
 python main_instance_segmentation.py general.checkpoint="/root/workspace/checkpoints/s3dis/scratch/area6_from_scratch.ckpt" general.train_mode=false
+```  
+Schon mal besser, löst aber noch nicht alles (| WARNING  | utils.utils:load_checkpoint_with_missing_or_exsessive_keys:100 - criterion.empty_weight not in loaded checkpoint): 
+```
+python main_instance_segmentation.py general.project_name="s3dis_eval" general.experiment_name="area${CURR_AREA}_pretrained_eps_${CURR_DBSCAN}_topk_${CURR_TOPK}_q_${CURR_QUERY}" general.checkpoint="/root/workspace/checkpoints/s3dis/scratch/area6_from_scratch.ckpt" general.train_mode=false data.batch_size=4 data/datasets=s3dis general.num_targets=14 data.num_labels=13 general.area=${CURR_AREA} model.num_queries=${CURR_QUERY} general.topk_per_image=${CURR_TOPK} general.use_dbscan=true general.dbscan_eps=${CURR_DBSCAN}
+```
+
+Weitere Versuche:
+```
+python main_instance_segmentation.py general.project_name="s3dis_eval" general.experiment_name="area${CURR_AREA}_pretrained_eps_${CURR_DBSCAN}_topk_${CURR_TOPK}_q_${CURR_QUERY}" general.checkpoint="/root/workspace/checkpoints/s3dis/scratch/area6_from_scratch.ckpt" general.train_mode=false data.batch_size=4 data/datasets=s3dis general.num_targets=14 data.num_labels=13 general.area=${CURR_AREA} model.num_queries=${CURR_QUERY} general.topk_per_image=${CURR_TOPK} general.use_dbscan=true general.dbscan_eps=${CURR_DBSCAN}
+```
+#!/bin/bash
+export OMP_NUM_THREADS=3  # speeds up MinkowskiEngine
+
+CURR_AREA=6  # set the area number accordingly [1,6]
+CURR_DBSCAN=0.6
+CURR_TOPK=-1
+CURR_QUERY=100
+
+python main_instance_segmentation.py \
+    general.project_name="s3dis_eval" \
+    general.experiment_name="area${CURR_AREA}_pretrained_eps_${CURR_DBSCAN}_topk_${CURR_TOPK}_q_${CURR_QUERY}" \
+    general.checkpoint="/root/workspace/checkpoints/s3dis/pretrained/area6_scannet_pretrained.ckpt" \
+    general.train_mode=false \
+    data.batch_size=4 \
+    data/datasets=s3dis \ ??????
+    general.num_targets=14 \
+    data.num_labels=13 \
+    general.area=${CURR_AREA} \
+    model.num_queries=${CURR_QUERY} \
+    general.topk_per_image=${CURR_TOPK} \
+    general.use_dbscan=true \
+    general.dbscan_eps=${CURR_DBSCAN}
+```  
 
 ## TODOs
 symlink setzen, checkpoints herunterladen, Tests ausführen
