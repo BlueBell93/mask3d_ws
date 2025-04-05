@@ -207,6 +207,10 @@ RUN cd pointnet2 \
 
 # pytorch-lightning
 WORKDIR /workspace/Mask3D
-RUN pip3 install pytorch-lightning==1.7.2
+RUN pip3 install pytorch-lightning==1.7.2 \
+    && pip install .
+
+RUN ln -s /root/workspace/data/ /workspace/Mask3D/mask3d \
+    && ln -s /root/workspace/checkpoints/ /workspace/Mask3D/mask3d/  
 
 

@@ -12,7 +12,7 @@ Ausführen des Docker-Containers
 ./run_mask3d_container.sh
 ```
 
-# Date Preprocessing für S3DIS
+# Data Preprocessing für S3DIS
 1. Download des S3DIS Datensatzes über dieses [Google Formular](https://docs.google.com/forms/d/e/1FAIpQLScDimvNMCGhy_rmBA2gHfDu3naktRm6A8BPwAWWDv-Uhm6Shw/viewform?c=0&w=1).
 Download des **Stanford3dDataset_v1.2_Aligned_Version.zip** und unzippen
 im Verzeichnis von **~/workspace/Mask3D/mask3d/data/**
@@ -27,6 +27,17 @@ Vorbereitung der Daten
 cd /workspace/Mask3d/mask3d
 python -m datasets.preprocessing.s3dis_preprocessing preprocess --data_dir="/root/workspace/datasets/Stanford3dDataset_v1.2_Aligned_Version" --save_dir="/root/workspace/data/processed/s3dis"
 ```
+
+Im **workspace** Folder, das in den Docker gemounted wird, folgendes Verzeichnis erstellen:
+```
+mkdir checkpoints
+```
+In diesem werden die checkpoints, die im Originalrepo verlinkt sind, abgelegt.
+Bei Bedarf Symlink setzen, z.B. 
+```
+ln -s /root/workspace/data/ /workspace/Mask3D/mask3d
+ln -s /root/workspace/checkpoints/ /workspace/Mask3D/mask3d/   
+``` 
 
 # Testen
 Herunterladen des entsprechenden Checkpoints für S3DIS-Datensatz und Ablegen in Ordner
