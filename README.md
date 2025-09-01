@@ -1,6 +1,6 @@
 # mask3d_ws
 Das Ziel ist ein Docker-Setup für Mask3D.
-Erstelle folgende Verzeichnisse in **mask3d_ws**
+Erstelle folgende Verzeichnisse in **mask3d_ws/workspace**
 ```
 cd checkpoints
 cd data
@@ -9,7 +9,7 @@ cd data
 # Installation Guide
 Bauen des Docker-Images
 ```
-docker build -t mask3d-easysetup .
+docker build -t mask3d-originalsetup .
 ```
 
 Ausführen des Docker-Containers
@@ -30,54 +30,24 @@ Korrektur einiger Fehler im Datensatz via (siehe hierzu [ISBNet Issue 60](https:
 Umbenennen der Datei **Stanford3dDataset_v1.2_Aligned_Version/Area_6/copyRoom_1/copy_Room_1.txt** im S3DIS-Datensatz zu 
 **Stanford3dDataset_v1.2_Aligned_Version/Area_6/copyRoom_1/copyRoom_1.txt**.
 
-Vorbereitung der Daten 
+Folgender Code im Container ausführen. Vorbereitung der Daten 
 ```
 cd /workspace/Mask3d/
 python -m datasets.preprocessing.s3dis_preprocessing preprocess --data_dir="/root/workspace/data/Stanford3dDataset_v1.2_Aligned_Version" --save_dir="/root/workspace/data/processed/s3dis"
 ```
 
-# Testen
-Herunterladen des entsprechenden Checkpoints für S3DIS-Datensatz und Ablegen in Ordner
-**~/workspace/Mask3D/mask3d/checkpoints/s3dis/scannet_pretrained/area6_scannet_pretrained.ckpt**
+# Testing Inference Results
+Herunterladen des entsprechenden Checkpoints für S3DIS-Datensatz und Ablegen im Ordner **mask3d_ws/workspace/checkpoints** z.B. in
+**mask3d_ws/workspace/checkpoints/s3dis/scratch/area6_from_scratch.ckpt**. Die Datei **custom_s3dis_from_scratch.sh** in den **workspace** Ordner (gemounteter Ordner) kopieren.
 
-Ausführen eines Tests:
-Warning, dass die Shapes des Checkpoints nicht stimmt:
-``` 
-cd ~/workspace/Mask3D/
-python main_instance_segmentation.py general.checkpoint="/root/workspace/checkpoints/s3dis/scratch/area6_from_scratch.ckpt" general.train_mode=false
-```  
-Schon mal besser, löst aber noch nicht alles (| WARNING  | utils.utils:load_checkpoint_with_missing_or_exsessive_keys:100 - criterion.empty_weight not in loaded checkpoint): 
+**custom_s3dis_from_scatch.sh** im laufenden Container in den Ordner **/workspace/mask3D** kopieren. Folgender Code wird im Container ausgeführt (in **/workspace/Mask3D/**):
 ```
-python main_instance_segmentation.py general.project_name="s3dis_eval" general.experiment_name="area${CURR_AREA}_pretrained_eps_${CURR_DBSCAN}_topk_${CURR_TOPK}_q_${CURR_QUERY}" general.checkpoint="/root/workspace/checkpoints/s3dis/scratch/area6_from_scratch.ckpt" general.train_mode=false data.batch_size=4 data/datasets=s3dis general.num_targets=14 data.num_labels=13 general.area=${CURR_AREA} model.num_queries=${CURR_QUERY} general.topk_per_image=${CURR_TOPK} general.use_dbscan=true general.dbscan_eps=${CURR_DBSCAN}
+sh /root/workspace/custom_s3dis_from_scratch.sh  
 ```
+In **/workspace/mask3D/eval_output** werden die Inferenz-Ergebnisse gespeichert. Kopiere diesen Ordner in den gemounteten **/root/workspace** Ordner, damit beim Schließen des Mask3D Docker Images die Ergebnisse nicht gelöscht sind. 
+In **/root/workspace/src** befindet sich ein Skript **create_mask3d_pcd.py**, welches aus den Inferenzergebnissen und den preprocessed Point Clouds pro Szene eine Punktwolke mit Instanzsegmentierung erstellt. Hierfür wird eine txt-Datei pro Szene dargestellt, pro Zeile wird ein Punkt beschrieben mit seinen Labels (x y z r g b semantischesLabel Instanzlabel).
+Folgende semantische Kategorien gelten: 
+0: ceiling, 1: floor, 2: wall, 3: beam, 4: column, 5: window, 6: door, 7: table, 8: chair, 9: sofa, 10: bookcase, 11: board, 12: clutter.
 
-Weitere Versuche:
-```
-python main_instance_segmentation.py general.project_name="s3dis_eval" general.experiment_name="area${CURR_AREA}_pretrained_eps_${CURR_DBSCAN}_topk_${CURR_TOPK}_q_${CURR_QUERY}" general.checkpoint="/root/workspace/checkpoints/s3dis/scratch/area6_from_scratch.ckpt" general.train_mode=false data.batch_size=4 data/datasets=s3dis general.num_targets=14 data.num_labels=13 general.area=${CURR_AREA} model.num_queries=${CURR_QUERY} general.topk_per_image=${CURR_TOPK} general.use_dbscan=true general.dbscan_eps=${CURR_DBSCAN}
-```
-#!/bin/bash
-export OMP_NUM_THREADS=3  # speeds up MinkowskiEngine
+Das Skript **visualization_pcd.py** im src-Ordner visualisiert die Punktwolke mit Instanzsegmentierung. 
 
-CURR_AREA=6  # set the area number accordingly [1,6]
-CURR_DBSCAN=0.6
-CURR_TOPK=-1
-CURR_QUERY=100
-
-python main_instance_segmentation.py \
-    general.project_name="s3dis_eval" \
-    general.experiment_name="area${CURR_AREA}_pretrained_eps_${CURR_DBSCAN}_topk_${CURR_TOPK}_q_${CURR_QUERY}" \
-    general.checkpoint="/root/workspace/checkpoints/s3dis/pretrained/area6_scannet_pretrained.ckpt" \
-    general.train_mode=false \
-    data.batch_size=4 \
-    data/datasets=s3dis \ ??????
-    general.num_targets=14 \
-    data.num_labels=13 \
-    general.area=${CURR_AREA} \
-    model.num_queries=${CURR_QUERY} \
-    general.topk_per_image=${CURR_TOPK} \
-    general.use_dbscan=true \
-    general.dbscan_eps=${CURR_DBSCAN}
-```  
-
-## TODOs
-symlink setzen, checkpoints herunterladen, Tests ausführen
