@@ -3,7 +3,7 @@ docker run \
     -it --rm \
     --env="DISPLAY" \
     --env="QT_X11_NO_MITSHM=1" \
-    --shm-size=6g \
+    --shm-size=16g \
     --mount type=bind,source="$(pwd)/workspace",target=/root/workspace \
     --name mask3d-easysetup \
     --network=host \
